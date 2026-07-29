@@ -1,0 +1,304 @@
+extends: spectral:oas
+
+# Sobrescreve severidade de regras built-in para error
+rules:
+  info-contact: error
+  info-license: error
+  openapi-tags: error
+
+  # ========================
+  # INFO
+  # ========================
+
+  info-description-required:
+    description: O bloco info deve conter o campo description
+    message: "info.description é obrigatório"
+    severity: error
+    given: "$.info"
+    then:
+      field: description
+      function: truthy
+
+  info-title-required:
+    description: O bloco info deve conter o campo title
+    message: "info.title é obrigatório"
+    severity: error
+    given: "$.info"
+    then:
+      field: title
+      function: truthy
+
+  info-version-required:
+    description: O bloco info deve conter o campo version
+    message: "info.version é obrigatório"
+    severity: error
+    given: "$.info"
+    then:
+      field: version
+      function: truthy
+
+  # ========================
+  # SERVERS
+  # ========================
+
+  servers-not-empty:
+    description: O documento deve conter ao menos um servidor declarado no bloco servers
+    message: "O bloco servers deve ter ao menos um servidor declarado"
+    severity: error
+    given: "$"
+    then:
+      field: servers
+      function: schema
+      functionOptions:
+        schema:
+          type: array
+          minItems: 1
+
+  # ========================
+  # OPERAÇÕES - CAMPOS OBRIGATÓRIOS
+  # ========================
+
+  operation-summary-required:
+    description: Todo endpoint deve ter um campo summary
+    message: "O campo summary é obrigatório em {{path}}"
+    severity: error
+    given: "$.paths[*][get,post,put,patch,delete,options,head]"
+    then:
+      field: summary
+      function: truthy
+
+  operation-description-required:
+    description: Todo endpoint deve ter um campo description
+    message: "O campo description é obrigatório em {{path}}"
+    severity: error
+    given: "$.paths[*][get,post,put,patch,delete,options,head]"
+    then:
+      field: description
+      function: truthy
+
+  operation-operationId-required:
+    description: Todo endpoint deve ter um campo operationId
+    message: "O campo operationId é obrigatório em {{path}}"
+    severity: error
+    given: "$.paths[*][get,post,put,patch,delete,options,head]"
+    then:
+      field: operationId
+      function: truthy
+
+  operation-tags-not-empty:
+    description: Todo endpoint deve ter ao menos uma tag
+    message: "O endpoint em {{path}} deve ter ao menos uma tag definida"
+    severity: error
+    given: "$.paths[*][get,post,put,patch,delete,options,head]"
+    then:
+      field: tags
+      function: schema
+      functionOptions:
+        schema:
+          type: array
+          minItems: 1
+
+  # ========================
+  # NOMENCLATURA - CAMELCASE
+  # ========================
+
+  operation-operationId-camelCase:
+    description: O operationId deve seguir o padrão camelCase
+    message: "operationId '{{value}}' deve estar em camelCase (ex: listarCategorias)"
+    severity: error
+    given: "$.paths[*][get,post,put,patch,delete,options,head].operationId"
+    then:
+      function: casing
+      functionOptions:
+        type: camel
+
+  schema-property-names-camelCase:
+    description: Nomes de propriedades de schemas devem seguir o padrão camelCase
+    message: "Propriedades em {{path}} devem usar camelCase (ex: nomeCompleto)"
+    severity: error
+    given: "$.components.schemas[*].properties"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          patternProperties:
+            "^[a-z][a-zA-Z0-9]*$": {}
+          additionalProperties: false
+
+  component-parameter-name-camelCase:
+    description: Nomes de parâmetros devem seguir o padrão camelCase
+    message: "Nome do parâmetro '{{value}}' deve estar em camelCase"
+    severity: error
+    given: "$.components.parameters[*].name"
+    then:
+      function: casing
+      functionOptions:
+        type: camel
+
+  # ========================
+  # SEGURANÇA
+  # ========================
+
+  global-security-defined:
+    description: O campo security deve estar definido no nível raiz do documento
+    message: "O campo security é obrigatório no nível raiz para aplicar autenticação globalmente"
+    severity: error
+    given: "$"
+    then:
+      field: security
+      function: defined
+
+  global-security-not-empty:
+    description: O campo security global não pode ser uma lista vazia
+    message: "O campo security no nível raiz deve conter ao menos um esquema de autenticação"
+    severity: error
+    given: "$.security"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: array
+          minItems: 1
+
+  security-bearerAuth-scheme-defined:
+    description: O esquema bearerAuth deve estar definido em components/securitySchemes
+    message: "O esquema bearerAuth deve ser declarado em components/securitySchemes"
+    severity: error
+    given: "$.components.securitySchemes"
+    then:
+      field: bearerAuth
+      function: defined
+
+  # ========================
+  # HTTP STATUS CODES OBRIGATÓRIOS
+  # ========================
+
+  operation-response-400-required:
+    description: Todo endpoint deve declarar a resposta 400 (BadRequest) para requisições inválidas
+    message: "O endpoint em {{path}} deve declarar a resposta 400 (BadRequest)"
+    severity: error
+    given: "$.paths[*][get,post,put,patch,delete].responses"
+    then:
+      field: "400"
+      function: defined
+
+  operation-response-401-required:
+    description: Todo endpoint deve declarar a resposta 401 (Unauthorized) pois a API requer autenticação JWT
+    message: "O endpoint em {{path}} deve declarar a resposta 401 (Unauthorized)"
+    severity: error
+    given: "$.paths[*][get,post,put,patch,delete].responses"
+    then:
+      field: "401"
+      function: defined
+
+  operation-response-403-required:
+    description: Todo endpoint deve declarar a resposta 403 (Forbidden) para controle de acesso
+    message: "O endpoint em {{path}} deve declarar a resposta 403 (Forbidden)"
+    severity: error
+    given: "$.paths[*][get,post,put,patch,delete].responses"
+    then:
+      field: "403"
+      function: defined
+
+  operation-response-500-required:
+    description: Todo endpoint deve declarar a resposta 500 (InternalServerError) para erros inesperados
+    message: "O endpoint em {{path}} deve declarar a resposta 500 (InternalServerError)"
+    severity: error
+    given: "$.paths[*][get,post,put,patch,delete].responses"
+    then:
+      field: "500"
+      function: defined
+
+  # ========================
+  # HEADER X-RequestId
+  # ========================
+
+  response-x-requestid-header-required:
+    description: Todos os responses devem retornar o header X-RequestId para rastreabilidade
+    message: "O response em {{path}} deve incluir o header X-RequestId do tipo UUID"
+    severity: error
+    given: "$.paths[*][get,post,put,patch,delete].responses[*]"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required:
+            - headers
+          properties:
+            headers:
+              type: object
+              required:
+                - X-RequestId
+
+  # ========================
+  # SCHEMAS SEM INLINE
+  # ========================
+
+  request-body-schema-must-use-ref:
+    description: Schemas de requestBody devem referenciar components/schemas via $ref
+    message: "O schema do requestBody em {{path}} deve usar $ref em vez de definição inline"
+    severity: error
+    resolved: false
+    given: "$.paths[*][post,put,patch].requestBody.content[*].schema"
+    then:
+      field: "$ref"
+      function: defined
+
+  # ========================
+  # EXEMPLOS NOS SCHEMAS
+  # ========================
+
+  schema-properties-must-have-example:
+    description: Toda propriedade de schema deve conter um campo example
+    message: "A propriedade em {{path}} deve ter um campo example definido"
+    severity: error
+    given: "$.components.schemas[*].properties[*]"
+    then:
+      field: example
+      function: defined
+
+  # ========================
+  # PARÂMETROS
+  # ========================
+
+  component-parameter-description-required:
+    description: Todo parâmetro em components deve ter um campo description
+    message: "O parâmetro em {{path}} deve ter um campo description"
+    severity: error
+    given: "$.components.parameters[*]"
+    then:
+      field: description
+      function: truthy
+
+  component-parameter-schema-required:
+    description: Todo parâmetro em components deve ter um campo schema
+    message: "O parâmetro em {{path}} deve ter um campo schema definido"
+    severity: error
+    given: "$.components.parameters[*]"
+    then:
+      field: schema
+      function: defined
+
+  component-parameter-schema-example-required:
+    description: O schema de todo parâmetro em components deve ter um campo example
+    message: "O schema do parâmetro em {{path}} deve ter um campo example"
+    severity: error
+    given: "$.components.parameters[*].schema"
+    then:
+      field: example
+      function: defined
+
+  # ========================
+  # TAGS
+  # ========================
+
+  tags-description-required:
+    description: Toda tag declarada globalmente deve ter uma description
+    message: "A tag em {{path}} deve ter um campo description"
+    severity: error
+    given: "$.tags[*]"
+    then:
+      field: description
+      function: truthy

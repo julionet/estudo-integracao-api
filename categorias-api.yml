@@ -1,0 +1,380 @@
+openapi: 3.0.3
+
+info:
+  title: API de Categorias
+  description: API para gerenciamento de categorias
+  version: 1.0.0
+  contact:
+    name: Suporte da API
+    email: suporte@exemplo.com
+    url: https://exemplo.com/suporte
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.exemplo.com/v1
+    description: Produção
+  - url: https://api-hom.exemplo.com/v1
+    description: Homologação
+  - url: http://localhost:8080/v1
+    description: Desenvolvimento
+
+security:
+  - bearerAuth: []
+
+paths:
+  /categorias:
+    get:
+      summary: Selecionar todas as categorias
+      description: Retorna uma lista com todas as categorias cadastradas no sistema. Requer autenticação via Bearer Token.
+      operationId: listarCategorias
+      tags:
+        - Categorias
+      parameters:
+        - $ref: '#/components/parameters/Descricao'
+        - $ref: '#/components/parameters/Status'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Lista de categorias retornada com sucesso
+          headers:
+            X-RequestId:
+              $ref: '#/components/headers/X-RequestId'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Categoria'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      summary: Incluir uma nova categoria
+      description: Cria uma nova categoria no sistema a partir dos dados informados no corpo da requisição. O campo `id` é gerado automaticamente e não deve ser enviado. Requer autenticação via Bearer Token.
+      operationId: criarCategoria
+      tags:
+        - Categorias
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoriaRequest'
+      responses:
+        '201':
+          description: Categoria criada com sucesso
+          headers:
+            X-RequestId:
+              $ref: '#/components/headers/X-RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Categoria'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /categorias/{id}:
+    get:
+      summary: Selecionar os dados de uma categoria
+      description: Retorna os dados de uma categoria específica identificada pelo `id` informado na URL. Requer autenticação via Bearer Token.
+      operationId: buscarCategoriaPorId
+      tags:
+        - Categorias
+      parameters:
+        - $ref: '#/components/parameters/CategoriaId'
+      responses:
+        '200':
+          description: Categoria encontrada com sucesso
+          headers:
+            X-RequestId:
+              $ref: '#/components/headers/X-RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Categoria'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      summary: Alterar os dados de uma categoria
+      description: Atualiza integralmente os dados de uma categoria existente identificada pelo `id` informado na URL. Todos os campos do corpo da requisição são obrigatórios. Requer autenticação via Bearer Token.
+      operationId: atualizarCategoria
+      tags:
+        - Categorias
+      parameters:
+        - $ref: '#/components/parameters/CategoriaId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoriaRequest'
+      responses:
+        '200':
+          description: Categoria atualizada com sucesso
+          headers:
+            X-RequestId:
+              $ref: '#/components/headers/X-RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Categoria'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      summary: Excluir uma categoria
+      description: Remove permanentemente uma categoria identificada pelo `id` informado na URL. A operação não pode ser desfeita. Requer autenticação via Bearer Token.
+      operationId: excluirCategoria
+      tags:
+        - Categorias
+      parameters:
+        - $ref: '#/components/parameters/CategoriaId'
+      responses:
+        '204':
+          description: Categoria excluída com sucesso
+          headers:
+            X-RequestId:
+              $ref: '#/components/headers/X-RequestId'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Autenticação via Bearer Token (JWT)
+
+  headers:
+    X-RequestId:
+      description: Identificador único da requisição no formato UUID
+      schema:
+        type: string
+        format: uuid
+        example: 550e8400-e29b-41d4-a716-446655440000
+
+  parameters:
+    Descricao:
+      name: descricao
+      in: query
+      required: false
+      description: Filtro por descrição aproximada (busca parcial, case-insensitive)
+      schema:
+        type: string
+        example: Eletr
+
+    Status:
+      name: status
+      in: query
+      required: false
+      description: Filtro por status da categoria
+      schema:
+        type: boolean
+        example: true
+
+    Page:
+      name: page
+      in: query
+      required: false
+      description: Número da página para paginação (iniciando em 1)
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        default: 1
+        example: 1
+
+    Limit:
+      name: limit
+      in: query
+      required: false
+      description: Quantidade máxima de registros retornados por página
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 100
+        default: 10
+        example: 10
+
+    CategoriaId:
+      name: id
+      in: path
+      required: true
+      description: Identificador único da categoria
+      schema:
+        type: integer
+        format: int64
+        example: 1
+
+  schemas:
+    Categoria:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Identificação da categoria gerada automaticamente
+          example: 1
+        descricao:
+          type: string
+          description: Descrição da categoria
+          example: Eletrônicos
+        status:
+          type: boolean
+          description: Determina se a categoria está ativa
+          example: true
+      required:
+        - id
+        - descricao
+        - status
+
+    CategoriaRequest:
+      type: object
+      properties:
+        descricao:
+          type: string
+          description: Descrição da categoria
+          example: Eletrônicos
+        status:
+          type: boolean
+          description: Determina se a categoria está ativa
+          example: true
+      required:
+        - descricao
+        - status
+
+    ErroResponse:
+      type: object
+      properties:
+        codigo:
+          type: string
+          description: Código do erro
+          example: BAD_REQUEST
+        mensagem:
+          type: string
+          description: Descrição do erro
+          example: Requisição inválida
+        detalhes:
+          type: array
+          description: Lista de detalhes do erro
+          items:
+            type: string
+          example:
+            - O campo 'descricao' é obrigatório
+      required:
+        - codigo
+        - mensagem
+
+  responses:
+    BadRequest:
+      description: Requisição inválida
+      headers:
+        X-RequestId:
+          $ref: '#/components/headers/X-RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErroResponse'
+          example:
+            codigo: BAD_REQUEST
+            mensagem: Requisição inválida
+            detalhes:
+              - O campo 'descricao' é obrigatório
+
+    Unauthorized:
+      description: Autenticação ausente, inválida ou token expirado
+      headers:
+        X-RequestId:
+          $ref: '#/components/headers/X-RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErroResponse'
+          example:
+            codigo: UNAUTHORIZED
+            mensagem: Autenticação ausente, inválida ou token expirado
+
+    Forbidden:
+      description: Usuário autenticado não possui permissão para executar esta ação
+      headers:
+        X-RequestId:
+          $ref: '#/components/headers/X-RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErroResponse'
+          example:
+            codigo: FORBIDDEN
+            mensagem: Usuário autenticado não possui permissão para executar esta ação
+
+    NotFound:
+      description: Informação não encontrada
+      headers:
+        X-RequestId:
+          $ref: '#/components/headers/X-RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErroResponse'
+          example:
+            codigo: NOT_FOUND
+            mensagem: Informação não encontrada
+
+    InternalServerError:
+      description: Erro interno do servidor
+      headers:
+        X-RequestId:
+          $ref: '#/components/headers/X-RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErroResponse'
+          example:
+            codigo: INTERNAL_SERVER_ERROR
+            mensagem: Erro interno do servidor
+
+tags:
+  - name: Categorias
+    description: Operações relacionadas ao gerenciamento de categorias
