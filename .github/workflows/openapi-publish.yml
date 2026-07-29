@@ -32,9 +32,12 @@ jobs:
       - name: Checkout do repositório
         uses: actions/checkout@v4
 
+      - name: Criar pasta docs
+        run: mkdir -p docs
+
       - name: Gerar HTML com Redoc
         run: |
-          npx redoc-cli build categorias-api.yml \
+          npx @redocly/cli build-docs categorias-api.yml \
             --title "API de Categorias" \
             --output docs/index.html
 
