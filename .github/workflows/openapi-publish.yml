@@ -5,6 +5,11 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 jobs:
   lint:
     name: Validar OpenAPI com Spectral
@@ -25,24 +30,34 @@ jobs:
     runs-on: ubuntu-latest
     needs: lint
 
-    permissions:
-      contents: write
-
     steps:
       - name: Checkout do repositório
         uses: actions/checkout@v4
+
+      - name: Instalar Redocly CLI
+        run: npm install -g @redocly/cli
 
       - name: Criar pasta docs
         run: mkdir -p docs
 
       - name: Gerar HTML com Redoc
         run: |
-          npx @redocly/cli build-docs categorias-api.yml \
+          redocly build-docs categorias-api.yml \
             --title "API de Categorias" \
             --output docs/index.html
+
+      - name: Verificar se index.html foi gerado
+        run: |
+          if [ ! -f docs/index.html ]; then
+            echo "ERRO: docs/index.html não foi gerado"
+            exit 1
+          fi
+          echo "OK: docs/index.html gerado com $(wc -c < docs/index.html) bytes"
 
       - name: Publicar no GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./docs
+          publish_branch: gh-pages
+          force_orphan: true
